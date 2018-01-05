@@ -1,222 +1,214 @@
 #include <errno.h>
 #include <curl/curl.h>
+#include <iostream>
 #include <fcntl.h>
-#include <sys/sysinfo.h>
 #include <assert.h>
-
-#include "Log.hpp"
-#include "Common.hpp"
-#include "Protocol.hpp"
 #include "Work.hpp"
-
-int Work::Init(std::string protocol, std::string url)
+Protocol *pl;
+int Work::Init(std::string protocol,std::string url)
 {
-    int ret = 0;
-    size_t pos = 0;
-    do {
-        mProtocol = protocol;
-        mURL = url;
-        pos = mURL.find_last_of("/");
-        if (pos != std::string::npos) {
-            mName = mURL.substr(pos + 1);
-        } else {
-            mName = url;
+   int ret =0; 
+   size_t pos = 0;
+   do{
+   	mURL = url;
+   	if(protocol == "http")
+  	{
+      	   pl = new HttpProtocol(mURL);
+           pl->Init();
+   	}
+   	else{
+      	   ret = PROTOCOL_INVALID;
+           break;
+   	}
+        pos=mURL.find_last_of("/");
+        if(pos!=std::string::npos)
+        {
+          mName=mURL.substr(pos+1);
         }
-
-        /* curl global init */
-        CURLcode code = curl_global_init(CURL_GLOBAL_ALL);
-        if ( code != CURLE_OK ) {
-            ret = CURL_GLOBAL_INIT;
-            ERROR_LOG("curl global init failed, error: " << ret);
-            break;
+        else{
+          mName = mURL;
         }
-
-    } while(0);
-
-    DEBUG_LOG("init, error: " << ret
-            << ", file name: " << mName);
-    return ret;
+   }while(0);
+   std::cout << "init , error: "<< ret << std::endl;
+   return ret;
 }
 
-Protocol *Work::NewProtocol()
+int Work::Prepare()
 {
-    Protocol *pl = NULL;
-    if (mProtocol == "http") {
-        pl = new HttpProtocol(mURL);
-    }
-
-
-    return pl;
+   int ret = 0;
+   size_t size = 0;
+   do{
+     ret = pl->getDownloadFileLength(size);
+     if(ret!=0)
+     {
+       break;
+     }
+     mSize = size;
+     mFD=open(mName.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+     if(mFD<0)
+     {
+        ret = errno;
+        std::cout << "open file failed, error: " << ret << std::endl;
+        break;
+     }
+   }while(0);
+   std::cout <<"file size: "<< mSize << std::endl;
+   return ret;
 }
 
-int Work::PrepareFile()
+int Work::GetBlockCount()
 {
-    int ret = 0;
-    size_t size = 0;
-    Protocol *pl = NULL;
-    pl = NewProtocol();
-    ret = pl->GetFileSize(size);
-    if( ret != 0)
+    int count = 0;
+    if(mSize < BLOCKSIZE)
     {
-       ERROR_LOG("get file size failed, error: " << ret);
+      count = 1;
     }
     else{
-       mSize = size;
-    }
+       if(mSize%BLOCKSIZE == 0)
+       {
+          count = mSize/BLOCKSIZE;
+       }
+       else{
+          count = mSize/BLOCKSIZE +1;
+       }
 
-    
-    mFD = open(mName.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
-    if (mFD < 0) {
-       ret = errno;
-       ERROR_LOG("open file failed, error: " << ret);
-    }
-    
-    DEBUG_LOG("init, error: " << ret
-            << ", file size: " << mSize);
-    return ret;
-
+    } 
+    return count;
 }
 
-uint32_t Work::GetWorkCount()
+void Work::PrepareFileBlock()
 {
-     uint32_t count = 0;
-     if (mSize < BLOCKSIZE)
-     {
-         count = 1;
-     }
-     else{
-        if(mSize%BLOCKSIZE == 0)
-        {
-          count = mSize / BLOCKSIZE;
-        }
-        else{
-          count = mSize / BLOCKSIZE +1;
-        }
-     }
+   int blockCount = GetBlockCount();
+   //FileInfo *info = NULL;
+   //info->fd=mFD;
+   //mFileBlock.clear();
+   if(blockCount > THREADNUM)
+   {
+      for(int i=0;i<THREADNUM;++i)
+      {
+         FileInfo *info;
+         info->fd=mFD;
 
-     return count;
-}
-
-int Work::CreateWorks()
-{
-    int ret = 0;
-    FileInfo info;
-    info.fd = mFD;
-    info.mErrno = 0;
-    size_t size;
-    Protocol *pl=NULL;
-    uint32_t workCount = GetWorkCount();
-    mProtocolQ.clear();
-    for(int i =0;i<workCount;++i)
-    {
-        if(i<workCount -1)
-        {
-            size = mSize/workCount;
-        }
-        else{
-            size = mSize -(workCount -1)*(mSize/workCount);
-        }
-        info.size = size;
-        info.offset= i*(mSize/workCount);
-
-        pl = NewProtocol();        
-        assert(NULL != pl);
-        ret = pl->Init();
-        pl->SetFileInfo(info);
-        if (ret != 0) {
-            break;
-        }
-        mProtocolQ.push_back(pl);
-    }
-    
-    return ret;
+         if(i<THREADNUM-1)
+         {
+            info->size = mSize/THREADNUM;
+         }
+         else{
+            info->size = mSize - (THREADNUM-1)*(mSize/THREADNUM);
+         }
+         info->offset=i*(mSize/THREADNUM);
+     
+         mFileBlock.push_back(info);
+      }
+   }
+   else{
+      for(int j =0 ;j<blockCount;++j)
+      {
+         FileInfo *info;
+         info->fd=mFD;
+         if(j<blockCount-1)
+         {
+            info->size  = mSize/blockCount;
+         }
+         else{
+            info->size = mSize -(blockCount-1)*(mSize/blockCount);
+         }
+         info->offset= j*(mSize/blockCount);
+         mFileBlock.push_back(info);
+      }
+   }
 }
 
 int Work::Start()
-{
-    int ret = 0;
-    Protocol *pl = NULL;
-    while (mProtocolQ.size() > 0) {
-        pl = mProtocolQ.front();
-        mProtocolQ.pop_front();
-        do {
-           ret = pthread_create(&mThreadId, NULL, Work::ThreadFunc,(void*)pl);
+{ 
+   int ret = 0;
+   for(std::vector<FileInfo*>::iterator iter=mFileBlock.begin();iter!=mFileBlock.end();++iter)
+   {
+      
+      do{
+           ret = pthread_create(&mThreadId, NULL, Work::ThreadFunc,(void*)*iter);
            if (ret != 0) {
                break;
            }
-          else{
-            WaitStop();
-          }
+           else{
+              mIdVec.push_back(mThreadId);
+           }
 
-        } while(0);
-        delete pl;
-        pl = NULL;
-    
-    }
-    return ret;
+      }while(0);
+   }
+   return ret;
 }
 #if 0
-void Work::Run(Protocol *pl)
+Protocol *Work::NewHttpProtocol()
 {
-    int ret = 0;
-    uint32_t retryCount = 0;   
-    while(GetMaxRetryCount() > retryCount && ret!=0)
-    {
-         ret = pl->DownloadFile(pl->GetFileInfo());
-         ++retryCount;
-    }
-    if (ret ! = 0) {
-        mCC->SetErrCode(ret);
-    }
+      Protocol * pl =new HttpProtocol(mURL);
+      return pl;
 }
 #endif
-void Work::WaitStop()
+void Work::Run(FileInfo* info)
 {
-    if(mThreadId != -1)
+    mErrno = pl->DownloadFile(info);
+}
+
+void Work::Wait()
+{
+   #if 1
+   for(std::vector<pthread_t>::iterator it = mIdVec.begin();it!=mIdVec.end();++it)
+   {
+      if(*it !=-1)
+      {
+        pthread_join(*it,NULL);
+        *it =-1;
+      }
+   }
+   #endif
+   mIdVec.clear();
+
+}
+
+int Work::DoWork()
+{
+  int ret = 0;
+  do{
+    PrepareFileBlock();
+    ret = Start();
+    if(ret!=0)
     {
-       pthread_join(mThreadId, NULL);
-       mThreadId = -1;
+       break;
+    }  
+    Wait();
+    if(mErrno !=0)
+    {
+       ret = mErrno;
+       std::cout << "download failed, error: " << mErrno << std::endl;
     }
-}
-
-int   Work::StartWork()
-{
-    int ret = 0;
-
-    do {
-        ret = PrepareFile();
-        if(ret != 0) {
-            break;
-        }
-        ret = CreateWorks();
-        if(ret != 0) {
-            break;
-        }
-        ret = Start();
-        if(ret != 0) {
-            break;
-        }
-        ret = GetErrCode();
-        if (ret != 0) {
-            break;
-        }
-    } while(0);
-
-    DEBUG_LOG("StartWork, error: " << ret);
-    return ret;
-}
+  }while(0);
+  
+  if(ret==0){
+    std::cout << "download file success!!!" << std::endl; 
+  }
+  
+  return ret;
+} 
 
 void Work::Finit()
 {
-   for(int i =0;i<mProtocolQ.size();++i)
+  
+   if(!mFileBlock.empty())
    {
-      delete mProtocolQ[i];
+       std::vector<FileInfo*>().swap(mFileBlock);
    }
-   mProtocolQ.clear();
-   if(mFD > 0)
+   mFileBlock.clear();
+   //pl->Finit();
+   if(pl != NULL)
+   {  
+      pl->Finit();
+      delete pl ;
+      pl = NULL;
+   } 
+   if(mFD>0)
    {
       close(mFD);
-      mFD = -1;
-   }
-   curl_global_cleanup();
-}
+   }  
+
+} 

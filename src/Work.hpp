@@ -1,103 +1,72 @@
 #ifndef __WORK_HPP__
 #define __WORK_HPP__
 
-
 #include <pthread.h>
 #include <deque>
+#include <vector>
 #include <stdint.h>
 #include "Protocol.hpp"
+#include "Common.hpp"
 
-
+class Protocol;
 class Work
 {
 public:
-    Work(uint32_t retryCount = 3): mRetryCount(retryCount)
+  Work()
+  {
+    mFD = -1;
+    mThreadId = -1;
+    mSize = 0;
+    mErrno = 0;
+    //pl = NULL;
+  }
+  ~Work()
+  {
+    #if 0
+    if(pl !=NULL)
     {
-        mErrno = 0;
-        mThreadId = -1;
-        mFD = -1;
-        pthread_mutex_init(&mMutex, NULL);
-        pthread_cond_init(&mCond, NULL);
+       delete pl;
+       pl=NULL;
     }
-    ~Work()
-    {
-        pthread_mutex_destroy(&mMutex);
-        pthread_cond_destroy(&mCond);
-    }
+    #endif
+  }
 
 public:
-    int Init(std::string protocol, std::string url);
-    void Finit();
-    int Start();
-    Protocol *NewProtocol();
-    int PrepareFile();
-    uint32_t GetWorkCount();
-    int StartWork();
-    int CreateWorks();
-    void WaitStop();
-    int32_t GetMaxRetryCount()
-    {
-        return mRetryCount;
-    
-    }
-    
-    void Run(Protocol *pl)
-    {
-      int ret = 0;
-      //HttpProtocol *pl =(HttpProtocol*)arg;
-      uint32_t retryCount = 0;   
-      FileInfo info = pl->GetFileInfo();
-      while(GetMaxRetryCount() > retryCount)
-      {
-         //FileInfo info = pl->GetFileInfo();
-         ret = pl->DownloadFile(&info);
-         ++retryCount;
-         if(ret == 0)
-         {
-            break;
-         }
-      }
-      if (ret != 0) {
-        SetErrCode(ret);
-      }
-    }
-    static void *ThreadFunc(void *arg)
-    {
-      HttpProtocol *pl =(HttpProtocol*)arg;
-      Work *wk = new Work();
-      wk->Run(pl);
-    }
-
-    inline int GetErrCode()
-    {
-        int err = 0;
-        pthread_mutex_lock(&mMutex);
-        err = mErrno;
-        pthread_mutex_unlock(&mMutex);
-
-        return err;
-    }
-
-    inline void SetErrCode(int err)
-    {
-        pthread_mutex_lock(&mMutex);
-        mErrno = err;
-        pthread_mutex_unlock(&mMutex);
-    }
-
-
+  static void *ThreadFunc(void *arg)
+  {
+     FileInfo *info=(FileInfo*)arg;
+     Work *wk = new Work();
+     wk->Run(info);
+     #if 1
+     if(wk!=NULL)
+     {
+        delete wk;
+        wk=NULL;
+     }
+     #endif
+  }
+public:
+  int Init(std::string protocol,std::string url);
+  int Prepare();
+  int GetBlockCount();
+  void PrepareFileBlock();
+  int Start();
+  void Wait();
+  //Protocol *NewHttpProtocol();
+  int DoWork();
+  void Run(FileInfo* info);
+  void Finit();
+  
 private:
-    pthread_t mThreadId;
-    std::deque<Protocol*> mProtocolQ;
-    pthread_mutex_t mMutex;
-    pthread_cond_t mCond;
-    int mErrno;
-    int mFD;
-    std::string mURL;
-    uint32_t mRetryCount;
-    size_t mSize;
-    std::string mProtocol;
-    std::string mName;
+  int mFD;
+  std::string mURL;
+  //Protocol *pl;
+  std::vector<FileInfo*> mFileBlock;
+  std::string mName;
+  pthread_t mThreadId;
+  size_t mSize;
+  std::vector<pthread_t> mIdVec;
+  int mErrno;
 };
 
 #endif

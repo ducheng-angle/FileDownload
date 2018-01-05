@@ -3,20 +3,22 @@
 
 #include <unistd.h>
 
-enum ERROR {
-    CURL_GLOBAL_INIT = -5 ,
-    CURL_EASY_INIT, 
-    CURL_EASY_PERFORM,
-    CURL_GET_FILE_SIZE, 
-    CURL_DOWNLOAD_FAILED, 
+enum ERROR
+{
+  PARAMETER_INVALID = 100,
+  PROTOCOL_INVALID,
+  CURL_EASY_PERFORM_FAILED,
+  CURL_GET_FILE_SIZE_FAILED,
+  FILE_WRITE_FAILED,
 };
-typedef struct File{
-    int fd;
-    off_t offset;
-    size_t size;
-    int mErrno;
+
+typedef struct file{
+   int fd;
+   off_t offset;
+   size_t size;
 }FileInfo;
 
 #define BLOCKSIZE 16<<10
+#define THREADNUM 128
 
 #endif
