@@ -72,36 +72,17 @@ int Work::GetBlockCount()
           count = mSize/BLOCKSIZE +1;
        }
 
+    }
+    if(count > THREADNUM)
+    {
+       count = THREADNUM;
     } 
     return count;
 }
 
 void Work::PrepareFileBlock()
 {
-   int blockCount = GetBlockCount();
-   //FileInfo *info = NULL;
-   //info->fd=mFD;
-   //mFileBlock.clear();
-   if(blockCount > THREADNUM)
-   {
-      for(int i=0;i<THREADNUM;++i)
-      {
-         FileInfo *info;
-         info->fd=mFD;
-
-         if(i<THREADNUM-1)
-         {
-            info->size = mSize/THREADNUM;
-         }
-         else{
-            info->size = mSize - (THREADNUM-1)*(mSize/THREADNUM);
-         }
-         info->offset=i*(mSize/THREADNUM);
-     
-         mFileBlock.push_back(info);
-      }
-   }
-   else{
+      int blockCount = GetBlockCount();
       for(int j =0 ;j<blockCount;++j)
       {
          FileInfo *info;
@@ -116,7 +97,7 @@ void Work::PrepareFileBlock()
          info->offset= j*(mSize/blockCount);
          mFileBlock.push_back(info);
       }
-   }
+   
 }
 
 int Work::Start()
@@ -183,10 +164,6 @@ int Work::DoWork()
        std::cout << "download failed, error: " << mErrno << std::endl;
     }
   }while(0);
-  
-  if(ret==0){
-    std::cout << "download file success!!!" << std::endl; 
-  }
   
   return ret;
 } 

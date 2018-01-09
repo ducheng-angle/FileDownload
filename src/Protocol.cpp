@@ -29,25 +29,24 @@ int HttpProtocol::getDownloadFileLength(size_t &size)
         ret = CURL_EASY_PERFORM_FAILED;
         std::cout << "curl perform failed when get file size, error: " << ret << std::endl;
    }
-   //std::cout << "size: " << size << std::endl;  
+   //std::cout << "size: " << mURL << std::endl;  
    curl_easy_cleanup(handle);
    return ret;    
 }
-
+//std::stringstream ss;
+//std::string blockRange;
 int HttpProtocol::DownloadFile(FileInfo *info)
 {
-        std::cout << "DownloadFile begin, fd:" << info->fd <<",offset: "<< info->offset << ",size: "<<info->size<<std::endl;
+        //std::cout << "DownloadFile begin, fd:" << info->fd <<",offset: "<< info->offset << ",size: "<<info->size<<std::endl;
         int ret = 0;
         #if 1
         std::stringstream ss;
-        ss.str("");
-        std::cout << "Download"<<std::endl;
         ss << info->offset << "-" << (info->offset + info->size - 1) << std::endl;
+        //std::cout << "DownloadFile begin, fd:" << info->fd <<",offset: "<< info->offset << ",size: "<<info->size<<std::endl;
         std::string blockRange;
         ss >> blockRange;
         #endif
-        
-        std::cout << "range:" << blockRange <<  std::endl;
+        //std::cout << "range:" << blockRange <<  std::endl;
         CURL *handle = curl_easy_init();
         CURLcode code;
         curl_easy_setopt(handle, CURLOPT_URL, mURL.c_str());
@@ -65,6 +64,6 @@ int HttpProtocol::DownloadFile(FileInfo *info)
            std::cout << "curl perform failed when down file, error: " << ret << std::endl;
         }
         curl_easy_cleanup(handle);
-        std::cout << "DownloadFile,error: " << ret << std::endl;
+        //std::cout << "DownloadFile,error: " << ret << std::endl;
         return ret; 
 }
