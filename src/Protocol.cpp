@@ -37,7 +37,7 @@ int HttpProtocol::getDownloadFileLength(size_t &size)
 //std::string blockRange;
 int HttpProtocol::DownloadFile(FileInfo *info)
 {
-        //std::cout << "DownloadFile begin, fd:" << info->fd <<",offset: "<< info->offset << ",size: "<<info->size<<std::endl;
+        std::cout << "DownloadFile begin, fd:" << info->fd <<",offset: "<< info->offset << ",size: "<<info->size<<std::endl;
         int ret = 0;
         std::stringstream ss;
         ss << info->offset << "-" << (info->offset + info->size - 1) << std::endl;

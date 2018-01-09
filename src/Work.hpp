@@ -60,7 +60,7 @@ public:
 private:
   int mFD;
   std::string mURL;
-  //Protocol *pl;
+  std::string mProtocol;
   std::vector<FileInfo*> mFileBlock;
   std::string mName;
   pthread_t mThreadId;

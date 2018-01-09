@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fcntl.h>
 #include <assert.h>
+#include <stdlib.h>
 #include "Work.hpp"
 Protocol *pl;
 int Work::Init(std::string protocol,std::string url)
@@ -11,6 +12,7 @@ int Work::Init(std::string protocol,std::string url)
    size_t pos = 0;
    do{
    	mURL = url;
+        mProtocol = protocol;
    	if(protocol == "http")
   	{
       	   pl = new HttpProtocol(mURL);
@@ -85,7 +87,7 @@ void Work::PrepareFileBlock()
       int blockCount = GetBlockCount();
       for(int j =0 ;j<blockCount;++j)
       {
-         FileInfo *info;
+         FileInfo *info = (FileInfo *)malloc(sizeof(FileInfo));
          info->fd=mFD;
          if(j<blockCount-1)
          {
@@ -119,13 +121,7 @@ int Work::Start()
    }
    return ret;
 }
-#if 0
-Protocol *Work::NewHttpProtocol()
-{
-      Protocol * pl =new HttpProtocol(mURL);
-      return pl;
-}
-#endif
+
 void Work::Run(FileInfo* info)
 {
     mErrno = pl->DownloadFile(info);
@@ -164,7 +160,10 @@ int Work::DoWork()
        std::cout << "download failed, error: " << mErrno << std::endl;
     }
   }while(0);
-  
+  if(ret==0)
+  {
+       std::cout << "download file success!!!"<<std::endl;
+  }
   return ret;
 } 
 
@@ -179,9 +178,12 @@ void Work::Finit()
    //pl->Finit();
    if(pl != NULL)
    {  
-      pl->Finit();
-      delete pl ;
-      pl = NULL;
+      if(mProtocol == "http")
+      {
+         pl->Finit();
+         delete pl ;
+         pl = NULL;
+      }
    } 
    if(mFD>0)
    {
