@@ -39,14 +39,10 @@ int HttpProtocol::DownloadFile(FileInfo *info)
 {
         //std::cout << "DownloadFile begin, fd:" << info->fd <<",offset: "<< info->offset << ",size: "<<info->size<<std::endl;
         int ret = 0;
-        #if 1
         std::stringstream ss;
         ss << info->offset << "-" << (info->offset + info->size - 1) << std::endl;
-        //std::cout << "DownloadFile begin, fd:" << info->fd <<",offset: "<< info->offset << ",size: "<<info->size<<std::endl;
         std::string blockRange;
         ss >> blockRange;
-        #endif
-        //std::cout << "range:" << blockRange <<  std::endl;
         CURL *handle = curl_easy_init();
         CURLcode code;
         curl_easy_setopt(handle, CURLOPT_URL, mURL.c_str());
