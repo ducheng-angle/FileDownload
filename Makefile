@@ -2,27 +2,22 @@ XX=g++
 FLAGS=-g
 TARGET=Download
 LIB=-lcurl -pthread
-FILESET=-D_LARGE_FILES -D _FILE_OFFSET_BITS=64
 
 SOURCEDIR=src
 PROJDIR=proj
 BINDIR=bin
 
 SOURCELIST=${wildcard ${SOURCEDIR}/*.cpp}
-PROJS=${patsubst ${SOURCEDIR}/%.cpp, ${PROJDIR}/%.o, ${SOURCELIST}}
-PROJDEPS=${OBJS:.o}
+PROJS=${patsubst ${SOURCEDIR}/%.cpp, ${PROJDIR}/%.o, ${SOURCELIST}
 
-${BINDIR}/${TARGET}:${PROJS} ${PROJDEPS}
+${BINDIR}/${TARGET}:${PROJS} 
 	${shell mkdir -p ${BINDIR}}
 	${XX} ${LIB} -o ${BINDIR}/${TARGET} ${PROJS}
 
 ${PROJDIR}/%.o:${SOURCEDIR}/%.cpp
 	${shell mkdir -p ${PROJDIR}}
-	${XX} -c $< -o $@ ${FILESET} ${FLAGS}
-
-
--include ${PROJDEPS}
+	${XX} -c $< -o $@ ${FLAGS} 
 
 clean:
-	@rm -rf ${PROJS} ${BINDIR}/${TARGET} ${PROJDEPS}
+	@rm -rf ${PROJS} ${BINDIR}/${TARGET}
 .PHONY : clean
