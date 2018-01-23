@@ -43,7 +43,7 @@ public:
      return writed;
   }
   virtual void Init() = 0;
-  virtual void Finit() = 0;
+  virtual void Clean() = 0;
   virtual int getDownloadFileLength(size_t &size) = 0;
   virtual int DownloadFile(FileInfo *info) = 0;
 public: 
@@ -64,7 +64,7 @@ public:
    {
      curl_global_init(CURL_GLOBAL_DEFAULT);
    }
-   virtual void Finit()
+   virtual void Clean()
    {
      curl_global_cleanup();
    }

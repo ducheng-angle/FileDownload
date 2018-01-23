@@ -5,7 +5,10 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "Work.hpp"
-Protocol *pl;
+
+Protocol *Work::pl=NULL;
+int Work::mErrno=0;
+
 int Work::Init(std::string protocol,std::string url)
 {
    int ret =0; 
@@ -16,6 +19,7 @@ int Work::Init(std::string protocol,std::string url)
    	if(protocol == "http")
   	{
       	   pl = new HttpProtocol(mURL);
+           assert(pl!=NULL);
            pl->Init();
    	}
    	else{
@@ -28,7 +32,8 @@ int Work::Init(std::string protocol,std::string url)
           mName=mURL.substr(pos+1);
         }
         else{
-          mName = mURL;
+           ret = PARAMETER_INVALID;
+           break;
         }
    }while(0);
    std::cout << "init , error: "<< ret << std::endl;
@@ -85,6 +90,7 @@ int Work::GetBlockCount()
 void Work::PrepareFileBlock()
 {
       int blockCount = GetBlockCount();
+      
       for(int j =0 ;j<blockCount;++j)
       {
          FileInfo *info = (FileInfo *)malloc(sizeof(FileInfo));
@@ -99,12 +105,13 @@ void Work::PrepareFileBlock()
          info->offset= j*(mSize/blockCount);
          mFileBlock.push_back(info);
       }
-   
 }
+
 
 int Work::Start()
 { 
    int ret = 0;
+   
    for(std::vector<FileInfo*>::iterator iter=mFileBlock.begin();iter!=mFileBlock.end();++iter)
    {
       
@@ -118,13 +125,12 @@ int Work::Start()
            }
 
       }while(0);
+      if(ret!=0)
+      {
+        break;
+      }
    }
    return ret;
-}
-
-void Work::Run(FileInfo* info)
-{
-    mErrno = pl->DownloadFile(info);
 }
 
 void Work::Wait()
@@ -140,7 +146,6 @@ void Work::Wait()
    }
    #endif
    mIdVec.clear();
-
 }
 
 int Work::DoWork()
@@ -169,25 +174,26 @@ int Work::DoWork()
 
 void Work::Finit()
 {
-  
+   #if 0 
    if(!mFileBlock.empty())
    {
        std::vector<FileInfo*>().swap(mFileBlock);
    }
    mFileBlock.clear();
-   //pl->Finit();
+   #endif
    if(pl != NULL)
    {  
       if(mProtocol == "http")
       {
-         pl->Finit();
+         pl->Clean();
          delete pl ;
          pl = NULL;
       }
    } 
-   if(mFD>0)
+   if(mFD!=-1)
    {
       close(mFD);
+      mFD=-1;
    }  
 
 } 

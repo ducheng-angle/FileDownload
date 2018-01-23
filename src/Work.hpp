@@ -17,56 +17,55 @@ public:
     mFD = -1;
     mThreadId = -1;
     mSize = 0;
-    mErrno = 0;
-    //pl = NULL;
+    //mErrno = 0;    
   }
   ~Work()
   {
-    #if 0
-    if(pl !=NULL)
+    for(std::vector<FileInfo*>::iterator it=mFileBlock.begin();it!=mFileBlock.end();++it)
     {
-       delete pl;
-       pl=NULL;
+        if(*it!=NULL){
+           delete *it;
+           *it=NULL;
+        }
     }
-    #endif
+    mFileBlock.clear();
   }
 
 public:
+  
   static void *ThreadFunc(void *arg)
   {
      FileInfo *info=(FileInfo*)arg;
-     Work *wk = new Work();
-     wk->Run(info);
-     #if 1
-     if(wk!=NULL)
-     {
-        delete wk;
-        wk=NULL;
-     }
-     #endif
+     mErrno=pl->DownloadFile(info);
   }
+  
 public:
+  
   int Init(std::string protocol,std::string url);
   int Prepare();
   int GetBlockCount();
   void PrepareFileBlock();
   int Start();
   void Wait();
-  //Protocol *NewHttpProtocol();
   int DoWork();
-  void Run(FileInfo* info);
+  void SetWork(std::vector<FileInfo*>& Works)
+  {
+      mFileBlock.swap(Works);
+  }
+
   void Finit();
   
 private:
+  static Protocol *pl;
   int mFD;
   std::string mURL;
   std::string mProtocol;
-  std::vector<FileInfo*> mFileBlock;
+  std::vector<FileInfo*> mFileBlock; 
   std::string mName;
   pthread_t mThreadId;
   size_t mSize;
   std::vector<pthread_t> mIdVec;
-  int mErrno;
+  static int mErrno;
 };
 
 #endif

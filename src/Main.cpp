@@ -9,6 +9,7 @@ int ParseArgs(int argc,char *argv[],std::string &protocol,std::string &url)
 {
    int ret =0;
    int opt ;
+   const std::string patterns[] = {"http://", "https://"};
    while((opt=getopt(argc,argv,"p:u:"))!= -1)
    {
        switch(opt)
@@ -41,7 +42,13 @@ int ParseArgs(int argc,char *argv[],std::string &protocol,std::string &url)
       ret =PARAMETER_INVALID;
       std::cout << "-u <URL> is requested" << std::endl;
    }
-    
+  
+   if(url.substr(0, patterns[0].size()) != patterns[0] && url.substr(0, patterns[1].size()) != patterns[1])
+   { 
+        ret =PARAMETER_INVALID;
+        std::cout << "-u <URL> invalid" << std::endl;
+   }
+   
    return ret;   
 }
 

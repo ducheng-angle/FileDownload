@@ -8,7 +8,7 @@ PROJDIR=proj
 BINDIR=bin
 
 SOURCELIST=${wildcard ${SOURCEDIR}/*.cpp}
-PROJS=${patsubst ${SOURCEDIR}/%.cpp, ${PROJDIR}/%.o, ${SOURCELIST}
+PROJS=${patsubst ${SOURCEDIR}/%.cpp, ${PROJDIR}/%.o, ${SOURCELIST}}
 
 ${BINDIR}/${TARGET}:${PROJS} 
 	${shell mkdir -p ${BINDIR}}
