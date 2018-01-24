@@ -10,13 +10,14 @@ BINDIR=bin
 SOURCELIST=${wildcard ${SOURCEDIR}/*.cpp}
 PROJS=${patsubst ${SOURCEDIR}/%.cpp, ${PROJDIR}/%.o, ${SOURCELIST}}
 
-${BINDIR}/${TARGET}:${PROJS} 
-	${shell mkdir -p ${BINDIR}}
-	${XX} ${LIB} -o ${BINDIR}/${TARGET} ${PROJS}
 
 ${PROJDIR}/%.o:${SOURCEDIR}/%.cpp
 	${shell mkdir -p ${PROJDIR}}
 	${XX} -c $< -o $@  ${FLAGS} 
+
+${BINDIR}/${TARGET}:${PROJS}
+	${shell mkdir -p ${BINDIR}}
+	${XX} ${LIB} -o ${BINDIR}/${TARGET} ${PROJS}
 
 clean:
 	@rm -rf ${PROJDIR} ${BINDIR}

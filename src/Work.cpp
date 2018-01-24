@@ -9,14 +9,12 @@
 Protocol *Work::pl=NULL;
 int Work::Errno=0;
 
-//初始化，URL及http等协议
+//初始化，http等协议
 int Work::Init()
 {
    int ret =0; 
    
    do{
-   	//URL = url;
-        //Type = protocol;
    	if(Type == "http")
   	{
       	   pl = new HttpProtocol(URL);

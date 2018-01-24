@@ -37,8 +37,10 @@ public:
   static void *ThreadFunc(void *arg)
   {
      FileInfo *info=(FileInfo*)arg;
-     Errno=pl->DownloadFile(info);
-     
+     if(Errno==0)
+     {
+    	 Errno=pl->DownloadFile(info);
+     }
   }
   
 public:
