@@ -45,7 +45,7 @@ int HttpProtocol::getDownloadFileLength(size_t &size)
  * **********************************************************************/
 int HttpProtocol::DownloadFile(FileInfo *info)
 {
-        //std::cout << "DownloadFile begin, fd:" << info->fd <<",offset: "<< info->offset << ",size: "<<info->size<<std::endl;
+        std::cout << "DownloadFile begin, fd:" << info->fd <<",offset: "<< info->offset << ",size: "<<info->size<<std::endl;
         int ret = 0;
         char range[64] = { 0 };
         snprintf (range, sizeof(range), "%ld-%ld", info->offset, info->offset + info->size - 1);

@@ -39,7 +39,39 @@ public:
      FileInfo *info=(FileInfo*)arg;
      if(Errno==0)
      {
-    	 Errno=pl->DownloadFile(info);
+         size_t size= info->size;
+         if(size>BLOCKSIZE)
+         {
+            FileInfo file;
+            file.fd=info->fd;
+            off_t begin=info->offset;
+            int count = 0;
+            if(size%BLOCKSIZE==0)
+            {
+               count = size/BLOCKSIZE;
+            }
+            else
+            {
+               count = size/BLOCKSIZE+1;
+            }
+            for(int i =0 ;i< count ;++i)
+            {
+               file.offset=begin+i*(size/count);
+               if(i<count-1)
+               {
+                  file.size=size/count;
+               }
+               else
+               {
+                  file.size=size-(size/count)*(count-1);
+               }
+               Errno=pl->DownloadFile(&file);
+            }
+            
+         }
+         else{
+    	     Errno=pl->DownloadFile(info);
+         }
      }
   }
   
