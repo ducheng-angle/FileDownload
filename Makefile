@@ -1,5 +1,5 @@
 XX=g++
-FLAGS=-g
+FLAGS=-g -Wall -D_REENTRANT
 TARGET=Download
 LIB=-lcurl -pthread
 
@@ -16,8 +16,8 @@ ${BINDIR}/${TARGET}:${PROJS}
 
 ${PROJDIR}/%.o:${SOURCEDIR}/%.cpp
 	${shell mkdir -p ${PROJDIR}}
-	${XX} -c $< -o $@ ${FLAGS} 
+	${XX} -c $< -o $@  ${FLAGS} 
 
 clean:
-	@rm -rf ${PROJS} ${BINDIR}/${TARGET}
+	@rm -rf ${PROJDIR} ${BINDIR}
 .PHONY : clean

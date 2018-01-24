@@ -21,7 +21,7 @@ int ParseArgs(int argc,char *argv[],std::string &protocol,std::string &url)
               url=std::string(optarg);
               break;
           default:
-              ret = PARAMETER_INVALID;
+              ret = ERR_PARAMETER_INVALID;
               std::cout << "invalid argreement: " << opt << std::endl;
               break;
        }
@@ -31,22 +31,22 @@ int ParseArgs(int argc,char *argv[],std::string &protocol,std::string &url)
        }
    }
    
-   if(protocol.empty() || protocol!="http")
+   if(protocol.empty())
    {
-       ret = PARAMETER_INVALID;
-       std::cout << "-p <PROTOCOL> is requested,and currently only support http" << std::endl;
+       ret = ERR_PARAMETER_INVALID;
+       std::cout << "-p protocol(http) is requested" << std::endl;
    } 
   
    if(url.empty())
    {
-      ret =PARAMETER_INVALID;
-      std::cout << "-u <URL> is requested" << std::endl;
+      ret = ERR_PARAMETER_INVALID;
+      std::cout << "-u url is requested" << std::endl;
    }
   
    if(url.substr(0, patterns[0].size()) != patterns[0] && url.substr(0, patterns[1].size()) != patterns[1])
    { 
-        ret =PARAMETER_INVALID;
-        std::cout << "-u <URL> invalid" << std::endl;
+        ret = ERR_PARAMETER_INVALID;
+        std::cout << "-u url invalid" << std::endl;
    }
    
    return ret;   
@@ -57,26 +57,17 @@ int main(int argc , char *argv[])
     int ret = 0;
     std::string protocol ;
     std::string url;
-    Work *wk = new Work();
-    assert( wk!=NULL);
+    Work *wk = NULL;
+   
     do{
       ret = ParseArgs(argc,argv,protocol,url);
       if(ret !=0)
       {
          break;
       }
+      wk=new Work(protocol,url);
+      assert( wk!=NULL);
       
-      ret = wk->Init(protocol,url);
-      if(ret !=0)
-      {
-         break;
-      }
-    
-      ret = wk->Prepare();
-      if(ret !=0)
-      {
-         break;
-      }
       ret=wk->DoWork();
       if(ret !=0)
       {
@@ -86,10 +77,9 @@ int main(int argc , char *argv[])
    
     if(wk!=NULL);
     {
-        wk->Finit();
         delete wk;
         wk=NULL;
     }
-    //std::cout << "download file, error: " << ret << std::endl; 
+    std::cout << "download file, error: " << ret << std::endl; 
     return ret;
 }

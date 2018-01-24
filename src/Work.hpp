@@ -12,23 +12,24 @@ class Protocol;
 class Work
 {
 public:
-  Work()
+  Work(std::string protocol,std::string url):Type(protocol),URL(url)
   {
-    mFD = -1;
-    mThreadId = -1;
-    mSize = 0;
-    //mErrno = 0;    
+    FD = -1;
+    ThreadId = -1;
+    Size = 0;   
   }
   ~Work()
   {
-    for(std::vector<FileInfo*>::iterator it=mFileBlock.begin();it!=mFileBlock.end();++it)
+    #if 0
+    for(std::vector<FileInfo*>::iterator it=FileBlock.begin();it!=FileBlock.end();++it)
     {
         if(*it!=NULL){
            delete *it;
            *it=NULL;
         }
     }
-    mFileBlock.clear();
+    FileBlock.clear();
+    #endif
   }
 
 public:
@@ -36,36 +37,32 @@ public:
   static void *ThreadFunc(void *arg)
   {
      FileInfo *info=(FileInfo*)arg;
-     mErrno=pl->DownloadFile(info);
+     Errno=pl->DownloadFile(info);
+     
   }
   
 public:
   
-  int Init(std::string protocol,std::string url);
-  int Prepare();
+  int Init();
+  int FileOperation();
   int GetBlockCount();
   void PrepareFileBlock();
   int Start();
   void Wait();
   int DoWork();
-  void SetWork(std::vector<FileInfo*>& Works)
-  {
-      mFileBlock.swap(Works);
-  }
-
-  void Finit();
+  void Clear();
   
 private:
   static Protocol *pl;
-  int mFD;
-  std::string mURL;
-  std::string mProtocol;
-  std::vector<FileInfo*> mFileBlock; 
-  std::string mName;
-  pthread_t mThreadId;
-  size_t mSize;
-  std::vector<pthread_t> mIdVec;
-  static int mErrno;
+  int FD;
+  std::string URL;
+  std::string Type;
+  std::vector<FileInfo*> FileBlock; 
+  std::string Name;
+  pthread_t ThreadId;
+  size_t Size;
+  std::vector<pthread_t> IdVec;
+  static int Errno;
 };
 
 #endif

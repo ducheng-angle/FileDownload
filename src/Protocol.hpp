@@ -30,8 +30,7 @@ public:
      {
         ret = pwrite(info->fd, ptr+writed,total,offset);
         if(ret <0)
-        {
-          writed = 0;   
+        {   
           std::cout << "pwrite failed: " << strerror(errno) << std::endl;
           break;
         }
@@ -72,6 +71,5 @@ public:
    virtual int DownloadFile(FileInfo *info);
 };
 #endif
-
 
 

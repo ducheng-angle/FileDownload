@@ -3,13 +3,14 @@
 
 #include <unistd.h>
 
-enum ERROR
+enum ERRNO
 {
-  PARAMETER_INVALID = 100,
-  PROTOCOL_INVALID,
-  CURL_EASY_PERFORM_FAILED,
-  CURL_GET_FILE_SIZE_FAILED,
-  FILE_WRITE_FAILED,
+  ERR_PARAMETER_INVALID = 100,
+  ERR_PROTOCOL_INVALID,
+  ERR_CURL_EASY_PERFORM_FAILED,
+  ERR_CURL_GET_FILE_SIZE_FAILED,
+  ERR_CURL_DOWNLOAD_FAILED,
+  ERR_FILE_WRITE_FAILED,
 };
 
 typedef struct file{
@@ -18,7 +19,7 @@ typedef struct file{
    size_t size;
 }FileInfo;
 
-#define BLOCKSIZE 16<<10
-#define THREADNUM 128
+#define BLOCKSIZE size_t(1*1024*1024)
+#define THREADNUM 32
 
 #endif
