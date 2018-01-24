@@ -35,18 +35,22 @@ int ParseArgs(int argc,char *argv[],std::string &protocol,std::string &url)
    {
        ret = ERR_PARAMETER_INVALID;
        std::cout << "-p protocol(http) is requested" << std::endl;
+       std::cout <<"Usage: Download -p <http> -u <http://www.example>" << std::endl;
+       std::cout <<"current only support http" << std::endl;
    } 
   
    if(url.empty())
    {
       ret = ERR_PARAMETER_INVALID;
       std::cout << "-u url is requested" << std::endl;
+      std::cout <<"Usage: Download -p <http> -u <http://www.example>" << std::endl;
    }
   
    if(url.substr(0, patterns[0].size()) != patterns[0] && url.substr(0, patterns[1].size()) != patterns[1])
    { 
         ret = ERR_PARAMETER_INVALID;
         std::cout << "-u url invalid" << std::endl;
+        std::cout <<"Usage: Download -p <http> -u <http://www.example>" << std::endl;
    }
    
    return ret;   
@@ -57,6 +61,13 @@ int main(int argc , char *argv[])
     int ret = 0;
     std::string protocol ;
     std::string url;
+    std::string help ="--help"; 
+    if (strcmp(argv[1], help.c_str()) == 0)  
+    {
+        std::cout <<"Usage: Download -p <http> -u <http://www.example>"<< std::endl;
+        std::cout <<"Note: only support http, and download file will be saved to current directory." << std::endl;
+        return 0;
+    }
     Work *wk = NULL;
    
     do{
