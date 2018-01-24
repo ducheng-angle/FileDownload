@@ -20,16 +20,7 @@ public:
   }
   ~Work()
   {
-    #if 0
-    for(std::vector<FileInfo*>::iterator it=FileBlock.begin();it!=FileBlock.end();++it)
-    {
-        if(*it!=NULL){
-           delete *it;
-           *it=NULL;
-        }
-    }
-    FileBlock.clear();
-    #endif
+    
   }
 
 public:
@@ -39,43 +30,8 @@ public:
      FileInfo *info=(FileInfo*)arg;
      if(Errno==0)
      {
-         #if SLICE 
-         size_t size= info->size;
-         if(size>BLOCKSIZE)
-         {
-            FileInfo file;
-            file.fd=info->fd;
-            off_t begin=info->offset;
-            int count = 0;
-            if(size%BLOCKSIZE==0)
-            {
-               count = size/BLOCKSIZE;
-            }
-            else
-            {
-               count = size/BLOCKSIZE+1;
-            }
-            for(int i =0 ;i< count ;++i)
-            {
-               file.offset=begin+i*(size/count);
-               if(i<count-1)
-               {
-                  file.size=size/count;
-               }
-               else
-               {
-                  file.size=size-(size/count)*(count-1);
-               }
-               Errno=pl->DownloadFile(&file);
-            }
-            
-         }
-         else{
-    	     Errno=pl->DownloadFile(info);
-         }
-         #else
          Errno=pl->DownloadFile(info);
-         #endif
+         
      }
   }
   

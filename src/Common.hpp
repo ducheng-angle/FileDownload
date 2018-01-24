@@ -23,6 +23,5 @@ typedef struct file{
 
 #define THREADNUM 32
 
-#define SLICE 1
 
 #endif
