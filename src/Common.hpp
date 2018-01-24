@@ -19,7 +19,10 @@ typedef struct file{
    size_t size;
 }FileInfo;
 
-#define BLOCKSIZE size_t(1*1024*1024)
+#define BLOCKSIZE size_t(10*1024*1024)
+
 #define THREADNUM 32
+
+#define SLICE 1
 
 #endif

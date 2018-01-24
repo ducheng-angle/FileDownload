@@ -39,6 +39,7 @@ public:
      FileInfo *info=(FileInfo*)arg;
      if(Errno==0)
      {
+         #if SLICE 
          size_t size= info->size;
          if(size>BLOCKSIZE)
          {
@@ -72,6 +73,9 @@ public:
          else{
     	     Errno=pl->DownloadFile(info);
          }
+         #else
+         Errno=pl->DownloadFile(info);
+         #endif
      }
   }
   
